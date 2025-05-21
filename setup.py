@@ -1,8 +1,10 @@
 import os
 import getpass
+# FIX 1: Update imports to avoid circular dependencies
+import os
 import weaviate
-from weaviate.classes.init import Auth, AdditionalConfig, Timeout
-from opik.integrations.openai import track_openai
+from weaviate.classes.init import Auth
+from weaviate.classes.init import AdditionalConfig, Timeout
 from openai import OpenAI
 import opik
 
@@ -22,7 +24,6 @@ os.environ["OPIK_PROJECT_NAME"] = "gary-abraham-footballers-rag"
 # Weaviate configuration
 WEAVIATE_CLUSTER_URL = os.getenv('WEAVIATE_CLUSTER_URL') or 'pbnlhdtt1yaa2rug3p1a.c0.us-west3.gcp.weaviate.cloud'
 WEAVIATE_API_KEY = os.getenv('WEAVIATE_API_KEY') or 'CKg9JA2BEmS1uWkGCW5MUCJehBlVM4JNptfi' # This is a read key
-
 weaviate_client = weaviate.connect_to_weaviate_cloud(
     cluster_url=WEAVIATE_CLUSTER_URL,
     auth_credentials=Auth.api_key(WEAVIATE_API_KEY),
