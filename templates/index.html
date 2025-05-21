@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football Player Recommendations</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        h1 {
+            color: #1a1a1a;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #1d4ed8;
+        }
+
+        button:disabled {
+            background-color: #93c5fd;
+            cursor: not-allowed;
+        }
+
+        .response-container {
+            background-color: #f8fafc;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            white-space: pre-wrap;
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 1rem 0;
+            color: #4b5563;
+        }
+
+        .error {
+            color: #dc2626;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .examples {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .examples h3 {
+            color: #1a1a1a;
+            margin-bottom: 0.5rem;
+        }
+
+        .examples ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .examples li {
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+
+        .examples li:hover {
+            background-color: #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Football Player Recommendations</h1>
+        <div class="input-container">
+            <input type="text" id="query" placeholder="What type of football player are you looking for?" />
+            <button onclick="getRecommendations()" id="submit-btn">Find Players</button>
+        </div>
+        <div class="loading" id="loading">Searching for players...</div>
+        <div class="error" id="error"></div>
+        <div class="response-container" id="response"></div>
+        
+        <div class="examples">
+            <h3>Example Queries:</h3>
+            <ul>
+                <li onclick="useExample('Top goal scorers in the Premier League')">Top goal scorers in the Premier League</li>
+                <li onclick="useExample('Best defenders in La Liga')">Best defenders in La Liga</li>
+                <li onclick="useExample('Young talented midfielders')">Young talented midfielders</li>
+                <li onclick="useExample('Players with most assists')">Players with most assists</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const queryInput = document.getElementById('query');
+        const submitBtn = document.getElementById('submit-btn');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const response = document.getElementById('response');
+
+        queryInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                getRecommendations();
+            }
+        });
+
+        function useExample(example) {
+            queryInput.value = example;
+            getRecommendations();
+        }
+
+        async function getRecommendations() {
+            const query = queryInput.value.trim();
+            if (!query) {
+                showError('Please enter a valid query');
+                return;
+            }
+
+            // Reset UI
+            hideError();
+            hideResponse();
+            showLoading();
+            disableSubmit();
+
+            try {
+                const response = await fetch('/recommend', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query }),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Something went wrong');
+                }
+
+                showResponse(data.response);
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                hideLoading();
+                enableSubmit();
+            }
+        }
+
+        function showLoading() {
+            loading.style.display = 'block';
+        }
+
+        function hideLoading() {
+            loading.style.display = 'none';
+        }
+
+        function showError(message) {
+            error.textContent = message;
+            error.style.display = 'block';
+        }
+
+        function hideError() {
+            error.style.display = 'none';
+        }
+
+        function showResponse(text) {
+            response.textContent = text;
+            response.style.display = 'block';
+        }
+
+        function hideResponse() {
+            response.style.display = 'none';
+        }
+
+        function disableSubmit() {
+            submitBtn.disabled = true;
+        }
+
+        function enableSubmit() {
+            submitBtn.disabled = false;
+        }
+    </script>
+</body>
+</html> 
